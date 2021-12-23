@@ -5,14 +5,16 @@ import PropTypes from 'prop-types';
 const ContactListItem = ({ el, delCont }) => (
   <li className={styles.listItem}>
     {el.name}: {el.number}
-    <button
-      className={styles.btn}
-      onClick={() => {
-        delCont(el.id);
-      }}
-    >
-      Delete
-    </button>
+    {delCont && (
+      <button
+        className={styles.btn}
+        onClick={() => {
+          delCont(el.id);
+        }}
+      >
+        Delete
+      </button>
+    )}
   </li>
 );
 
