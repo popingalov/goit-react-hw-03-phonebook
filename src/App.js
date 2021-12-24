@@ -12,16 +12,21 @@ class App extends Component {
     contacts: [],
     value: 0,
     filter: '',
-    historyDelCont: '',
+    historyDelCont: [],
   };
   componentDidMount() {
     const parsedContacts = JSON.parse(localStorage.getItem('contacts'));
     const localS = JSON.parse(window.localStorage.getItem('historyDelCont'));
-    if (localS) {
-      this.setState({ historyDelCont: localS });
-    }
+
+    localS && this.setState({ historyDelCont: localS });
+
     parsedContacts && this.setState({ contacts: parsedContacts });
+
     window.onunload = () => {
+      localStorage.setItem(
+        'historyDelCont',
+        JSON.stringify(this.state.historyDelCont),
+      );
       localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
     };
   }
@@ -55,52 +60,41 @@ class App extends Component {
       contacts.name.toLowerCase().includes(filter.toLowerCase()),
     );
   };
-  addToLocalDel = contactId => {
-    for (const obj of this.state.contacts) {
+
+  deleteContact = contactId => {
+    const { historyDelCont, contacts } = this.state;
+    const newContact = [];
+    for (const obj of contacts) {
       if (obj.id === contactId) {
-        const localS = JSON.parse(
-          window.localStorage.getItem('historyDelCont'),
-        );
-
-        if (localS) {
-          localS.push(obj);
-          window.localStorage.setItem('historyDelCont', JSON.stringify(localS));
-          console.log(localS);
-          this.setState({ historyDelCont: localS });
-
-          return;
+        if (historyDelCont) {
+          this.setState(prevState => ({
+            historyDelCont: [...prevState.historyDelCont, obj],
+          }));
         }
-        if (!localS) {
+        if (obj.id !== contactId) {
           this.setState({ historyDelCont: [obj] });
-          window.localStorage.setItem('historyDelCont', JSON.stringify([obj]));
         }
       }
+      if (obj.id !== contactId) {
+        newContact.push(obj);
+      }
     }
-  };
-  deleteContact = contactId => {
-    this.addToLocalDel(contactId);
 
-    this.setState(() => {
-      return {
-        contacts: this.state.contacts.filter(
-          contact => contact.id !== contactId,
-        ),
-      };
-    });
+    this.setState({ contacts: newContact });
   };
 
   render() {
-    /*  const {historyDelCont, contact} = this.state */
+    const { historyDelCont, contacts, filter } = this.state;
     return (
       <div>
         <h1>Phonebook</h1>
         <ContactForm onAddContact={this.addContact} />
 
         <h2>Contacts</h2>
-        {this.state.contacts.length > 1 && (
+        {contacts.length > 1 && (
           <Filter
             handleChangeFilter={this.handleChangeFilter}
-            filter={this.state.filter}
+            filter={filter}
           />
         )}
 
@@ -108,9 +102,7 @@ class App extends Component {
           contacts={this.filteredContact()}
           deleteContact={this.deleteContact}
         />
-        {this.state.historyDelCont && (
-          <SaveDellCont contacts={this.state.historyDelCont} />
-        )}
+        {historyDelCont && <SaveDellCont contacts={historyDelCont} />}
       </div>
     );
   }
