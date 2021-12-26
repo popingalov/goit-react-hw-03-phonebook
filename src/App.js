@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import './App.css';
-import SaveDellCont from './Components/SaveDellCont/SaveDellCont';
 import ContactForm from './Components/ContactForm/ContactForm';
 import ContactList from './Components/ContactList/ContactList';
 import Filter from './Components/Filter/Filter';
@@ -12,21 +11,13 @@ class App extends Component {
     contacts: [],
     value: 0,
     filter: '',
-    historyDelCont: [],
   };
   componentDidMount() {
     const parsedContacts = JSON.parse(localStorage.getItem('contacts'));
-    const localS = JSON.parse(window.localStorage.getItem('historyDelCont'));
-
-    localS && this.setState({ historyDelCont: localS });
 
     parsedContacts && this.setState({ contacts: parsedContacts });
 
     window.onunload = () => {
-      localStorage.setItem(
-        'historyDelCont',
-        JSON.stringify(this.state.historyDelCont),
-      );
       localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
     };
   }
@@ -62,29 +53,13 @@ class App extends Component {
   };
 
   deleteContact = contactId => {
-    const { historyDelCont, contacts } = this.state;
-    const newContact = [];
-    for (const obj of contacts) {
-      if (obj.id === contactId) {
-        if (historyDelCont) {
-          this.setState(prevState => ({
-            historyDelCont: [...prevState.historyDelCont, obj],
-          }));
-        }
-        if (obj.id !== contactId) {
-          this.setState({ historyDelCont: [obj] });
-        }
-      }
-      if (obj.id !== contactId) {
-        newContact.push(obj);
-      }
-    }
-
-    this.setState({ contacts: newContact });
+    this.setState(prevState => ({
+      contacts: prevState.contacts.filter(contact => contact.id !== contactId),
+    }));
   };
 
   render() {
-    const { historyDelCont, contacts, filter } = this.state;
+    const { contacts, filter } = this.state;
     return (
       <div>
         <h1>Phonebook</h1>
@@ -102,7 +77,6 @@ class App extends Component {
           contacts={this.filteredContact()}
           deleteContact={this.deleteContact}
         />
-        {historyDelCont && <SaveDellCont contacts={historyDelCont} />}
       </div>
     );
   }
